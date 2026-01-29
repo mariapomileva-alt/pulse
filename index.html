@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FastPulse — Simple Pulse Checks</title>
+    <link rel="stylesheet" href="voting-app.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="app">
+        <header class="app-header">
+            <div class="brand" id="brandHome" role="button" aria-label="FastPulse home" tabindex="0">
+                <span class="brand-mark">●</span>
+                FastPulse
+            </div>
+        </header>
+
+        <main class="app-content">
+            <section id="landingView" class="view">
+                <div class="hero">
+                    <h1>FastPulse</h1>
+                    <p>Quick pulse checks with history and trends.</p>
+                    <button id="startCreateBtn" class="btn btn-primary btn-large">Create a pulse</button>
+                </div>
+            </section>
+
+            <section id="createView" class="view hidden">
+                <div class="card">
+                    <h2>Create a pulse</h2>
+                    <form id="pulseForm" class="form">
+                        <label class="field">
+                            <span>Pulse title</span>
+                            <input id="pulseTitle" type="text" placeholder="Weekly Team Pulse" required>
+                        </label>
+                        <label class="field">
+                            <span>Cadence</span>
+                            <select id="pulseCadence">
+                                <option value="one-time">One-time</option>
+                                <option value="weekly">Weekly</option>
+                            </select>
+                        </label>
+                        <div id="questionsContainer" class="questions"></div>
+                        <button type="button" id="addQuestionBtn" class="btn btn-secondary">Add question</button>
+                        <label class="toggle">
+                            <input id="anonymousToggle" type="checkbox" checked>
+                            Anonymous
+                        </label>
+                        <div id="pulseFormMessage" class="form-message"></div>
+                        <button type="submit" class="btn btn-primary btn-large">Publish pulse</button>
+                    </form>
+                </div>
+            </section>
+
+            <section id="publishView" class="view hidden">
+                <div class="card">
+                    <h2>Pulse published</h2>
+                    <p class="subtitle">Share the link or QR code to collect responses.</p>
+                    <div class="share-row">
+                        <input id="publishLink" type="text" readonly>
+                        <button id="copyLinkBtn" class="btn btn-secondary">Copy link</button>
+                    </div>
+                    <div class="qr-block">
+                        <div class="qr-label">QR code</div>
+                        <img id="qrCodeImage" alt="QR code for pulse link" loading="lazy">
+                        <div id="qrCodeFallback" class="qr-fallback hidden">QR code unavailable</div>
+                    </div>
+                    <div class="actions-row">
+                        <button id="downloadQrBtn" class="btn btn-secondary">Download QR</button>
+                        <button id="viewResultsBtn" class="btn btn-primary">View results</button>
+                    </div>
+                </div>
+            </section>
+
+            <section id="respondView" class="view hidden">
+                <div class="card">
+                    <div class="pill">Pulse</div>
+                    <h2 id="respondTitle">Loading...</h2>
+                    <p id="respondSubtitle" class="subtitle">One tap per answer.</p>
+                    <div id="respondIdentity" class="identity hidden">
+                        <label class="field">
+                            <span>Your name</span>
+                            <input id="respondName" type="text" placeholder="Your name">
+                        </label>
+                    </div>
+                    <div id="questionCard" class="question-card">
+                        <div id="questionCounter" class="question-counter"></div>
+                        <h3 id="questionText">Loading question...</h3>
+                        <div id="answerOptions" class="answer-options"></div>
+                        <div id="respondMessage" class="form-message"></div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="resultsView" class="view hidden">
+                <div class="card">
+                    <h2 id="resultsTitle">Results</h2>
+                    <p id="resultsSubtitle" class="subtitle"></p>
+                    <div class="actions-row">
+                        <button id="exportCsvBtn" class="btn btn-secondary">Export CSV</button>
+                    </div>
+                    <div id="resultsCharts" class="charts"></div>
+                </div>
+            </section>
+
+            <section id="thankYouView" class="view hidden">
+                <div class="card thankyou-card">
+                    <div class="thankyou-mark">★</div>
+                    <h2>Thanks! Your response has been recorded.</h2>
+                    <p class="subtitle">You can close this page now.</p>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script type="module" src="voting-app.js"></script>
+</body>
+</html>
