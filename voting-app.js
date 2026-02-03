@@ -1,5 +1,8 @@
-import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.1/+esm";
-import { SUPABASE_URL, SUPABASE_ANON_KEY } from "./config.js";
+const { SUPABASE_URL, SUPABASE_ANON_KEY } = window;
+const supabaseLib = window.supabase;
+const supabase = supabaseLib && SUPABASE_URL && SUPABASE_ANON_KEY
+    ? supabaseLib.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+    : null;
 
 const landingView = document.getElementById("landingView");
 const createView = document.getElementById("createView");
@@ -53,8 +56,6 @@ const EMOJI_SCALE = [
     { label: "🔥", value: 4 },
 ];
 const NUMBER_SCALE = [1, 2, 3, 4, 5];
-
-const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 let activePulse = null;
 let activeAdminKey = null;
@@ -114,7 +115,6 @@ const createOptionRow = (value = "") => {
     input.type = "text";
     input.placeholder = "Option";
     input.value = value;
-    input.required = true;
 
     const removeBtn = document.createElement("button");
     removeBtn.type = "button";
@@ -143,6 +143,17 @@ const updateOptionButtons = (questionBlock) => {
     if (addBtn) {
         addBtn.disabled = rows.length >= MAX_SINGLE_OPTIONS;
     }
+};
+
+const setOptionsEnabled = (questionBlock, enabled) => {
+    const inputs = questionBlock.querySelectorAll(".option-row input");
+    inputs.forEach((input) => {
+        input.disabled = !enabled;
+        input.required = enabled;
+        if (!enabled) {
+            input.value = input.value;
+        }
+    });
 };
 
 const createQuestionBlock = (index) => {
@@ -213,12 +224,15 @@ const createQuestionBlock = (index) => {
     typeField.querySelector("select").addEventListener("change", (event) => {
         if (event.target.value === "single") {
             optionsPanel.classList.remove("hidden");
+            setOptionsEnabled(block, true);
         } else {
             optionsPanel.classList.add("hidden");
+            setOptionsEnabled(block, false);
         }
     });
 
     block.append(header, textField, typeField, optionsPanel);
+    setOptionsEnabled(block, false);
     updateOptionButtons(block);
     return block;
 };
@@ -237,7 +251,17 @@ const initQuestionBlocks = () => {
     questionsContainer.appendChild(createQuestionBlock(0));
 };
 
+const ensureSupabase = () => {
+    if (supabase) {
+        return true;
+    }
+    return false;
+};
+
 const fetchPulseBySlug = async (slug) => {
+    if (!ensureSupabase()) {
+        return null;
+    }
     const { data: pulse, error } = await supabase
         .from("pulses")
         .select("id, title, slug, cadence, is_anonymous, admin_key, created_at")
@@ -283,6 +307,9 @@ const getWeekStart = (date) => {
 };
 
 const getOrCreatePulseRun = async (pulse) => {
+    if (!ensureSupabase()) {
+        return null;
+    }
     if (pulse.cadence === "one-time") {
         const { data: runs } = await supabase
             .from("pulse_runs")
@@ -437,7 +464,9 @@ const setupRespondView = async (slug) => {
     const pulse = await fetchPulseBySlug(slug);
     if (!pulse) {
         respondTitle.textContent = "Pulse not found";
-        respondSubtitle.textContent = "Check the link or ask for a new one.";
+        respondSubtitle.textContent = supabase
+            ? "Check the link or ask for a new one."
+            : "Supabase is not configured. Add keys in config.js.";
         respondIdentity.classList.add("hidden");
         answerOptions.innerHTML = "";
         showView(respondView);
@@ -610,6 +639,13 @@ const renderCharts = (pulse, questions, responses, responseValues, runs) => {
 };
 
 const setupResultsView = async (slug) => {
+    if (!ensureSupabase()) {
+        resultsTitle.textContent = "Results unavailable";
+        resultsSubtitle.textContent = "Supabase is not configured. Add keys in config.js.";
+        exportCsvBtn.classList.add("hidden");
+        showView(resultsView);
+        return;
+    }
     const pulse = await fetchPulseBySlug(slug);
     if (!pulse) {
         resultsTitle.textContent = "Results not found";
@@ -703,6 +739,9 @@ const exportCsv = () => {
 
 const initCreateFlow = () => {
     initQuestionBlocks();
+    window.fastpulseOpenCreate = () => {
+        showView(createView);
+    };
     startCreateBtn.addEventListener("click", () => {
         showView(createView);
     });
@@ -716,6 +755,11 @@ const initCreateFlow = () => {
     pulseForm.addEventListener("submit", async (event) => {
         event.preventDefault();
         pulseFormMessage.textContent = "";
+
+        if (!ensureSupabase()) {
+            pulseFormMessage.textContent = "Supabase is not configured. Add keys in config.js.";
+            return;
+        }
 
         const title = pulseTitle.value.trim();
         const cadence = pulseCadence.value;
