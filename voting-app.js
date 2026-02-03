@@ -86,8 +86,8 @@ const getBaseUrl = () => {
     return `${origin}${basePath}`.replace(/\/$/, "");
 };
 
-const buildPulseLink = (slug) => `${getBaseUrl()}/p/${slug}`;
-const buildResultsLink = (slug, key) => `${getBaseUrl()}/r/${slug}?key=${key}`;
+const buildPulseLink = (slug) => `${getBaseUrl()}?p=${slug}`;
+const buildResultsLink = (slug, key) => `${getBaseUrl()}?r=${slug}&key=${key}`;
 
 const getRoute = () => {
     const pathParts = window.location.pathname.split("/").filter(Boolean);
