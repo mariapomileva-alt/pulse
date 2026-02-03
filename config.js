@@ -1,2 +1,2 @@
-window.SUPABASE_URL = "https://ygkihopdluebecdvaoqe.supabase.co";
-window.SUPABASE_ANON_KEY = "sb_publishable_u0fslqR17Gq6HqK-oi4vRg_ders4QXv";
+window.SUPABASE_URL = "https://vngvcbbmniuyuvppcsme.supabase.co";
+window.SUPABASE_ANON_KEY = "sb_publishable_pRgu8yb5g28tBscYDK7KBA_5xIpxiAJ";
