@@ -192,6 +192,7 @@ const createQuestionBlock = (index) => {
             <option value="emoji">Emoji scale (😴 😐 🙂 🔥)</option>
             <option value="scale">1–5 scale</option>
             <option value="single">Single choice (max 3)</option>
+            <option value="text">Written answer</option>
         </select>
     `;
 
@@ -394,11 +395,77 @@ const renderRespondQuestion = () => {
             label: String(value),
             valueNumber: value,
         }));
-    } else {
+    } else if (currentQuestion.type === "single") {
         options = (currentQuestion.options || []).map((option) => ({
             label: option.label,
             optionId: option.id,
         }));
+    } else if (currentQuestion.type === "text") {
+        const wrapper = document.createElement("div");
+        wrapper.className = "answer-text";
+        const input = document.createElement("textarea");
+        input.rows = 4;
+        input.placeholder = "Your answer";
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "btn btn-primary btn-large";
+        button.textContent = "Submit answer";
+        button.addEventListener("click", async () => {
+            respondMessage.textContent = "";
+            const textValue = input.value.trim();
+            if (!textValue) {
+                respondMessage.textContent = "Please write an answer.";
+                input.focus();
+                return;
+            }
+            if (!respondState.responseId) {
+                if (!respondState.pulse.is_anonymous) {
+                    const name = respondName.value.trim();
+                    if (!name) {
+                        respondMessage.textContent = "Please enter your name.";
+                        respondName.focus();
+                        return;
+                    }
+                }
+                const run = await getOrCreatePulseRun(respondState.pulse);
+                if (!run) {
+                    respondMessage.textContent = "Could not start this pulse. Try again.";
+                    return;
+                }
+                respondState.runId = run.id;
+                const { data: response, error } = await supabase
+                    .from("responses")
+                    .insert({
+                        pulse_id: respondState.pulse.id,
+                        pulse_run_id: run.id,
+                        respondent_label: respondState.pulse.is_anonymous ? null : respondName.value.trim(),
+                    })
+                    .select()
+                    .single();
+                if (error || !response) {
+                    respondMessage.textContent = "Something went wrong. Try again.";
+                    return;
+                }
+                respondState.responseId = response.id;
+            }
+            const payload = {
+                response_id: respondState.responseId,
+                question_id: currentQuestion.id,
+                option_id: null,
+                value_number: null,
+                value_text: textValue,
+            };
+            const { error } = await supabase.from("response_values").insert(payload);
+            if (error) {
+                respondMessage.textContent = "Could not save your response. Try again.";
+                return;
+            }
+            respondState.currentIndex += 1;
+            renderRespondQuestion();
+        });
+        wrapper.append(input, button);
+        answerOptions.appendChild(wrapper);
+        return;
     }
 
     options.forEach((option) => {
@@ -527,11 +594,34 @@ const renderCharts = (pulse, questions, responses, responseValues, runs) => {
                 data = EMOJI_SCALE.map(
                     (item) => values.filter((value) => value.value_number === item.value).length,
                 );
-            } else {
+            } else if (question.type === "scale") {
                 labels = NUMBER_SCALE.map((item) => String(item));
                 data = NUMBER_SCALE.map(
                     (item) => values.filter((value) => value.value_number === item).length,
                 );
+            } else if (question.type === "text") {
+                const list = document.createElement("div");
+                list.className = "text-answers";
+                const items = values
+                    .map((value) => value.value_text)
+                    .filter(Boolean)
+                    .slice(-10)
+                    .reverse();
+                if (!items.length) {
+                    const empty = document.createElement("div");
+                    empty.className = "empty-state";
+                    empty.textContent = "No written responses yet.";
+                    list.appendChild(empty);
+                } else {
+                    items.forEach((text) => {
+                        const row = document.createElement("div");
+                        row.className = "text-answer";
+                        row.textContent = text;
+                        list.appendChild(row);
+                    });
+                }
+                card.appendChild(list);
+                return;
             }
 
             new Chart(canvas.getContext("2d"), {
