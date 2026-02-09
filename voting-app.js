@@ -43,7 +43,7 @@ const exportCsvBtn = document.getElementById("exportCsvBtn");
 
 const brandHome = document.getElementById("brandHome");
 
-const MAX_QUESTIONS = 3;
+const MAX_QUESTIONS = 5;
 const MIN_SINGLE_OPTIONS = 2;
 const MAX_SINGLE_OPTIONS = 3;
 const SLUG_LENGTH = 7;
