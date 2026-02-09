@@ -544,17 +544,30 @@ const renderCharts = (pulse, questions, responses, responseValues, runs) => {
                             data,
                             backgroundColor: "rgba(255, 59, 59, 0.8)",
                             borderRadius: 999,
+                            borderSkipped: false,
+                            maxBarThickness: 48,
+                            categoryPercentage: 0.6,
+                            barPercentage: 0.7,
                         },
                     ],
                 },
                 options: {
                     responsive: true,
-                    maintainAspectRatio: false,
+                    maintainAspectRatio: true,
+                    aspectRatio: 2.4,
                     plugins: {
                         legend: { display: false },
                     },
                     scales: {
-                        y: { beginAtZero: true, ticks: { precision: 0 } },
+                        x: {
+                            grid: { display: false },
+                            ticks: { color: "#5a6b7f" },
+                        },
+                        y: {
+                            beginAtZero: true,
+                            ticks: { precision: 0, color: "#5a6b7f" },
+                            grid: { color: "rgba(11, 45, 91, 0.08)" },
+                        },
                     },
                 },
             });
