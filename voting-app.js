@@ -18,6 +18,8 @@ const pulseCadence = document.getElementById("pulseCadence");
 const questionsContainer = document.getElementById("questionsContainer");
 const addQuestionBtn = document.getElementById("addQuestionBtn");
 const anonymousToggle = document.getElementById("anonymousToggle");
+const collectEmailToggle = document.getElementById("collectEmailToggle");
+const collectPhoneToggle = document.getElementById("collectPhoneToggle");
 const pulseFormMessage = document.getElementById("pulseFormMessage");
 
 const publishLink = document.getElementById("publishLink");
@@ -31,6 +33,10 @@ const respondTitle = document.getElementById("respondTitle");
 const respondSubtitle = document.getElementById("respondSubtitle");
 const respondIdentity = document.getElementById("respondIdentity");
 const respondName = document.getElementById("respondName");
+const respondEmailField = document.getElementById("respondEmailField");
+const respondPhoneField = document.getElementById("respondPhoneField");
+const respondEmail = document.getElementById("respondEmail");
+const respondPhone = document.getElementById("respondPhone");
 const questionCounter = document.getElementById("questionCounter");
 const questionText = document.getElementById("questionText");
 const answerOptions = document.getElementById("answerOptions");
@@ -265,7 +271,7 @@ const fetchPulseBySlug = async (slug) => {
     }
     const { data: pulse, error } = await supabase
         .from("pulses")
-        .select("id, title, slug, cadence, is_anonymous, admin_key, created_at")
+        .select("id, title, slug, cadence, is_anonymous, collect_email, collect_phone, admin_key, created_at")
         .eq("slug", slug)
         .single();
 
@@ -419,13 +425,23 @@ const renderRespondQuestion = () => {
                 return;
             }
             if (!respondState.responseId) {
-                if (!respondState.pulse.is_anonymous) {
-                    const name = respondName.value.trim();
-                    if (!name) {
-                        respondMessage.textContent = "Please enter your name.";
-                        respondName.focus();
-                        return;
-                    }
+                const name = respondName.value.trim();
+                const email = respondEmail.value.trim();
+                const phone = respondPhone.value.trim();
+                if (!respondState.pulse.is_anonymous && !name) {
+                    respondMessage.textContent = "Please enter your name.";
+                    respondName.focus();
+                    return;
+                }
+                if (respondState.pulse.collect_email && !email) {
+                    respondMessage.textContent = "Please enter your email.";
+                    respondEmail.focus();
+                    return;
+                }
+                if (respondState.pulse.collect_phone && !phone) {
+                    respondMessage.textContent = "Please enter your phone.";
+                    respondPhone.focus();
+                    return;
                 }
                 const run = await getOrCreatePulseRun(respondState.pulse);
                 if (!run) {
@@ -438,7 +454,9 @@ const renderRespondQuestion = () => {
                     .insert({
                         pulse_id: respondState.pulse.id,
                         pulse_run_id: run.id,
-                        respondent_label: respondState.pulse.is_anonymous ? null : respondName.value.trim(),
+                        respondent_label: respondState.pulse.is_anonymous ? null : name,
+                        respondent_email: respondState.pulse.collect_email ? email : null,
+                        respondent_phone: respondState.pulse.collect_phone ? phone : null,
                     })
                     .select()
                     .single();
@@ -476,13 +494,23 @@ const renderRespondQuestion = () => {
         button.addEventListener("click", async () => {
             respondMessage.textContent = "";
             if (!respondState.responseId) {
-                if (!respondState.pulse.is_anonymous) {
-                    const name = respondName.value.trim();
-                    if (!name) {
-                        respondMessage.textContent = "Please enter your name.";
-                        respondName.focus();
-                        return;
-                    }
+                const name = respondName.value.trim();
+                const email = respondEmail.value.trim();
+                const phone = respondPhone.value.trim();
+                if (!respondState.pulse.is_anonymous && !name) {
+                    respondMessage.textContent = "Please enter your name.";
+                    respondName.focus();
+                    return;
+                }
+                if (respondState.pulse.collect_email && !email) {
+                    respondMessage.textContent = "Please enter your email.";
+                    respondEmail.focus();
+                    return;
+                }
+                if (respondState.pulse.collect_phone && !phone) {
+                    respondMessage.textContent = "Please enter your phone.";
+                    respondPhone.focus();
+                    return;
                 }
                 const run = await getOrCreatePulseRun(respondState.pulse);
                 if (!run) {
@@ -495,7 +523,9 @@ const renderRespondQuestion = () => {
                     .insert({
                         pulse_id: respondState.pulse.id,
                         pulse_run_id: run.id,
-                        respondent_label: respondState.pulse.is_anonymous ? null : respondName.value.trim(),
+                        respondent_label: respondState.pulse.is_anonymous ? null : name,
+                        respondent_email: respondState.pulse.collect_email ? email : null,
+                        respondent_phone: respondState.pulse.collect_phone ? phone : null,
                     })
                     .select()
                     .single();
@@ -542,10 +572,28 @@ const setupRespondView = async (slug) => {
     respondState = { pulse, currentIndex: 0, responseId: null, runId: null };
     respondTitle.textContent = pulse.title;
     respondSubtitle.textContent = "One tap per answer.";
-    if (pulse.is_anonymous) {
+    if (pulse.is_anonymous && !pulse.collect_email && !pulse.collect_phone) {
         respondIdentity.classList.add("hidden");
     } else {
         respondIdentity.classList.remove("hidden");
+    }
+    if (pulse.is_anonymous) {
+        respondName.value = "";
+        respondName.closest(".field")?.classList.add("hidden");
+    } else {
+        respondName.closest(".field")?.classList.remove("hidden");
+    }
+    if (pulse.collect_email) {
+        respondEmailField.classList.remove("hidden");
+    } else {
+        respondEmailField.classList.add("hidden");
+        respondEmail.value = "";
+    }
+    if (pulse.collect_phone) {
+        respondPhoneField.classList.remove("hidden");
+    } else {
+        respondPhoneField.classList.add("hidden");
+        respondPhone.value = "";
     }
     showView(respondView);
     renderRespondQuestion();
@@ -775,7 +823,7 @@ const setupResultsView = async (slug) => {
     const questionIds = pulse.questions.map((question) => question.id);
     const { data: responses } = await supabase
         .from("responses")
-        .select("id, pulse_run_id, created_at")
+        .select("id, pulse_run_id, created_at, respondent_label, respondent_email, respondent_phone")
         .eq("pulse_id", pulse.id)
         .order("created_at", { ascending: true });
 
@@ -814,7 +862,7 @@ const exportCsv = () => {
         (question.options || []).forEach((option) => optionMap.set(option.id, option));
     });
 
-    const headers = ["timestamp", "question", "answer value", "pulse id"];
+    const headers = ["timestamp", "question", "answer value", "pulse id", "name", "email", "phone"];
     const rows = responseValues.map((value) => {
         const response = responseMap.get(value.response_id);
         const question = questionMap.get(value.question_id);
@@ -825,6 +873,9 @@ const exportCsv = () => {
             question?.text ?? "",
             answer,
             pulse.id,
+            response?.respondent_label ?? "",
+            response?.respondent_email ?? "",
+            response?.respondent_phone ?? "",
         ];
     });
 
@@ -867,6 +918,8 @@ const initCreateFlow = () => {
         const title = pulseTitle.value.trim();
         const cadence = pulseCadence.value;
         const isAnonymous = anonymousToggle.checked;
+        const collectEmail = collectEmailToggle.checked;
+        const collectPhone = collectPhoneToggle.checked;
 
         if (!title) {
             pulseFormMessage.textContent = "Add a pulse title.";
@@ -911,6 +964,8 @@ const initCreateFlow = () => {
                     slug,
                     cadence,
                     is_anonymous: isAnonymous,
+                    collect_email: collectEmail,
+                    collect_phone: collectPhone,
                     admin_key: adminKey,
                 })
                 .select()
