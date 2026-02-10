@@ -28,6 +28,8 @@ const downloadQrBtn = document.getElementById("downloadQrBtn");
 const viewResultsBtn = document.getElementById("viewResultsBtn");
 const qrCodeImage = document.getElementById("qrCodeImage");
 const qrCodeFallback = document.getElementById("qrCodeFallback");
+const recentPulses = document.getElementById("recentPulses");
+const recentPulsesList = document.getElementById("recentPulsesList");
 
 const respondTitle = document.getElementById("respondTitle");
 const respondSubtitle = document.getElementById("respondSubtitle");
@@ -54,6 +56,8 @@ const MIN_SINGLE_OPTIONS = 2;
 const MAX_SINGLE_OPTIONS = 3;
 const SLUG_LENGTH = 7;
 const ADMIN_KEY_LENGTH = 12;
+const RECENT_PULSES_KEY = "fastpulse.recentPulses";
+const RECENT_PULSES_LIMIT = 8;
 
 const EMOJI_SCALE = [
     { label: "😴", value: 1 },
@@ -372,6 +376,96 @@ const publishPulse = (pulse, adminKey) => {
     };
     qrCodeImage.src = `https://quickchart.io/qr?text=${encoded}&size=180`;
     showView(publishView);
+    saveRecentPulse(pulse, adminKey);
+    renderRecentPulses();
+};
+
+const loadRecentPulses = () => {
+    try {
+        const stored = JSON.parse(localStorage.getItem(RECENT_PULSES_KEY) || "[]");
+        return Array.isArray(stored) ? stored : [];
+    } catch (error) {
+        return [];
+    }
+};
+
+const saveRecentPulse = (pulse, adminKey) => {
+    const stored = loadRecentPulses();
+    const filtered = stored.filter((item) => item.slug !== pulse.slug);
+    const next = [
+        {
+            slug: pulse.slug,
+            title: pulse.title,
+            adminKey,
+            cadence: pulse.cadence,
+            createdAt: new Date().toISOString(),
+        },
+        ...filtered,
+    ].slice(0, RECENT_PULSES_LIMIT);
+    localStorage.setItem(RECENT_PULSES_KEY, JSON.stringify(next));
+};
+
+const renderRecentPulses = () => {
+    if (!recentPulses || !recentPulsesList) {
+        return;
+    }
+    const items = loadRecentPulses();
+    if (!items.length) {
+        recentPulses.classList.add("hidden");
+        recentPulsesList.innerHTML = "";
+        return;
+    }
+    recentPulses.classList.remove("hidden");
+    recentPulsesList.innerHTML = "";
+    items.forEach((item) => {
+        const card = document.createElement("div");
+        card.className = "recent-item";
+        const title = document.createElement("div");
+        title.className = "recent-title";
+        title.textContent = item.title || "Untitled pulse";
+        const meta = document.createElement("div");
+        meta.className = "recent-meta";
+        meta.textContent = `${item.cadence || "one-time"} • ${new Date(item.createdAt).toLocaleDateString()}`;
+        const actions = document.createElement("div");
+        actions.className = "recent-actions";
+
+        const openPulse = document.createElement("button");
+        openPulse.type = "button";
+        openPulse.className = "btn btn-secondary";
+        openPulse.textContent = "Open pulse";
+        openPulse.addEventListener("click", () => {
+            window.location.href = buildPulseLink(item.slug);
+        });
+
+        const openResults = document.createElement("button");
+        openResults.type = "button";
+        openResults.className = "btn btn-primary";
+        openResults.textContent = "View results";
+        openResults.addEventListener("click", () => {
+            window.location.href = buildResultsLink(item.slug, item.adminKey);
+        });
+
+        const copyAdmin = document.createElement("button");
+        copyAdmin.type = "button";
+        copyAdmin.className = "btn btn-secondary";
+        copyAdmin.textContent = "Copy admin link";
+        copyAdmin.addEventListener("click", async () => {
+            const link = buildResultsLink(item.slug, item.adminKey);
+            try {
+                await navigator.clipboard.writeText(link);
+                copyAdmin.textContent = "Copied";
+            } catch (error) {
+                copyAdmin.textContent = "Copied";
+            }
+            setTimeout(() => {
+                copyAdmin.textContent = "Copy admin link";
+            }, 1200);
+        });
+
+        actions.append(openPulse, openResults, copyAdmin);
+        card.append(title, meta, actions);
+        recentPulsesList.appendChild(card);
+    });
 };
 
 const renderRespondQuestion = () => {
@@ -1087,4 +1181,5 @@ if (mode === "respond" && slug) {
 } else {
     showView(landingView);
     initCreateFlow();
+    renderRecentPulses();
 }
