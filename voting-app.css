@@ -140,6 +140,22 @@ body {
     margin-top: 10px;
 }
 
+.icon-btn {
+    align-self: flex-start;
+    margin-top: 8px;
+    width: 42px;
+    height: 42px;
+    border-radius: 999px;
+    border: none;
+    background: rgba(11, 45, 91, 0.08);
+    cursor: pointer;
+    font-size: 18px;
+}
+
+.icon-btn:hover {
+    background: rgba(11, 45, 91, 0.14);
+}
+
 .form {
     display: flex;
     flex-direction: column;
