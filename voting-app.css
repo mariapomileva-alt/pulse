@@ -193,6 +193,13 @@ body {
     font-weight: 600;
 }
 
+.toggle-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px 18px;
+    align-items: center;
+}
+
 .btn {
     border: none;
     border-radius: 999px;
