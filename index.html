@@ -26,6 +26,10 @@
                     <p>Quick pulse checks with history and trends.</p>
                     <button id="startCreateBtn" class="btn btn-primary btn-large" onclick="document.getElementById('landingView')?.classList.add('hidden');document.getElementById('createView')?.classList.remove('hidden');">Create a pulse</button>
                 </div>
+                <div id="recentPulses" class="card hidden">
+                    <h2>Recent pulses</h2>
+                    <div id="recentPulsesList" class="recent-list"></div>
+                </div>
             </section>
 
             <section id="createView" class="view hidden">
