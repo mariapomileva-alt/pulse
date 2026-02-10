@@ -45,10 +45,20 @@
                         </label>
                         <div id="questionsContainer" class="questions"></div>
                         <button type="button" id="addQuestionBtn" class="btn btn-secondary">Add question</button>
-                        <label class="toggle">
-                            <input id="anonymousToggle" type="checkbox" checked>
-                            Anonymous
-                        </label>
+                        <div class="toggle-group">
+                            <label class="toggle">
+                                <input id="anonymousToggle" type="checkbox" checked>
+                                Anonymous
+                            </label>
+                            <label class="toggle">
+                                <input id="collectEmailToggle" type="checkbox">
+                                Require email
+                            </label>
+                            <label class="toggle">
+                                <input id="collectPhoneToggle" type="checkbox">
+                                Require phone
+                            </label>
+                        </div>
                         <div id="pulseFormMessage" class="form-message"></div>
                         <button type="submit" class="btn btn-primary btn-large">Publish pulse</button>
                     </form>
@@ -84,6 +94,14 @@
                         <label class="field">
                             <span>Your name</span>
                             <input id="respondName" type="text" placeholder="Your name">
+                        </label>
+                        <label class="field hidden" id="respondEmailField">
+                            <span>Your email</span>
+                            <input id="respondEmail" type="email" placeholder="you@email.com">
+                        </label>
+                        <label class="field hidden" id="respondPhoneField">
+                            <span>Your phone</span>
+                            <input id="respondPhone" type="tel" placeholder="+1 555 123 4567">
                         </label>
                     </div>
                     <div id="questionCard" class="question-card">
