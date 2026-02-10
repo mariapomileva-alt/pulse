@@ -1,3 +1,4 @@
+[SETUP_SUPABASE.md](https://github.com/user-attachments/files/25217099/SETUP_SUPABASE.md)
 # Supabase setup (FastPulse MVP)
 
 ## 1) Create a Supabase project
@@ -14,6 +15,8 @@ create table if not exists pulses (
   slug text not null unique,
   cadence text not null,
   is_anonymous boolean not null default true,
+  collect_email boolean not null default false,
+  collect_phone boolean not null default false,
   admin_key text not null,
   created_at timestamptz not null default now()
 );
@@ -45,6 +48,8 @@ create table if not exists responses (
   pulse_id uuid references pulses(id) on delete cascade,
   pulse_run_id uuid references pulse_runs(id) on delete cascade,
   respondent_label text,
+  respondent_email text,
+  respondent_phone text,
   created_at timestamptz not null default now()
 );
 
