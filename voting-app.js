@@ -462,8 +462,19 @@ const renderRecentPulses = () => {
             }, 1200);
         });
 
+        const deleteBtn = document.createElement("button");
+        deleteBtn.type = "button";
+        deleteBtn.className = "icon-btn";
+        deleteBtn.setAttribute("aria-label", "Remove from recent");
+        deleteBtn.innerHTML = "🗑️";
+        deleteBtn.addEventListener("click", () => {
+            const next = loadRecentPulses().filter((entry) => entry.slug !== item.slug);
+            localStorage.setItem(RECENT_PULSES_KEY, JSON.stringify(next));
+            renderRecentPulses();
+        });
+
         actions.append(openPulse, openResults, copyAdmin);
-        card.append(title, meta, actions);
+        card.append(title, meta, actions, deleteBtn);
         recentPulsesList.appendChild(card);
     });
 };
