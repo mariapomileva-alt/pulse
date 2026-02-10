@@ -30,6 +30,11 @@ const qrCodeImage = document.getElementById("qrCodeImage");
 const qrCodeFallback = document.getElementById("qrCodeFallback");
 const recentPulses = document.getElementById("recentPulses");
 const recentPulsesList = document.getElementById("recentPulsesList");
+const usageStats = document.getElementById("usageStats");
+const statsTotalPulses = document.getElementById("statsTotalPulses");
+const statsTotalResponses = document.getElementById("statsTotalResponses");
+const statsResponsesWeek = document.getElementById("statsResponsesWeek");
+const OWNER_STATS_KEY = window.OWNER_STATS_KEY;
 
 const respondTitle = document.getElementById("respondTitle");
 const respondSubtitle = document.getElementById("respondSubtitle");
@@ -480,6 +485,35 @@ const renderRecentPulses = () => {
         card.append(title, meta, footer);
         recentPulsesList.appendChild(card);
     });
+};
+
+const renderUsageStats = async () => {
+    if (!usageStats || !ensureSupabase()) {
+        return;
+    }
+    if (!OWNER_STATS_KEY || OWNER_STATS_KEY === "CHANGE_ME") {
+        usageStats.classList.add("hidden");
+        return;
+    }
+    const ownerParam = new URLSearchParams(window.location.search).get("owner");
+    if (ownerParam !== OWNER_STATS_KEY) {
+        usageStats.classList.add("hidden");
+        return;
+    }
+    const weekStart = new Date();
+    weekStart.setDate(weekStart.getDate() - 7);
+    const weekIso = weekStart.toISOString();
+
+    const [{ count: pulsesCount }, { count: responsesCount }, { count: weekCount }] = await Promise.all([
+        supabase.from("pulses").select("id", { count: "exact", head: true }),
+        supabase.from("responses").select("id", { count: "exact", head: true }),
+        supabase.from("responses").select("id", { count: "exact", head: true }).gte("created_at", weekIso),
+    ]);
+
+    statsTotalPulses.textContent = String(pulsesCount ?? 0);
+    statsTotalResponses.textContent = String(responsesCount ?? 0);
+    statsResponsesWeek.textContent = String(weekCount ?? 0);
+    usageStats.classList.remove("hidden");
 };
 
 const renderRespondQuestion = () => {
@@ -1196,4 +1230,5 @@ if (mode === "respond" && slug) {
     showView(landingView);
     initCreateFlow();
     renderRecentPulses();
+    renderUsageStats();
 }
