@@ -474,7 +474,10 @@ const renderRecentPulses = () => {
         });
 
         actions.append(openPulse, openResults, copyAdmin);
-        card.append(title, meta, actions, deleteBtn);
+        const footer = document.createElement("div");
+        footer.className = "recent-footer";
+        footer.append(actions, deleteBtn);
+        card.append(title, meta, footer);
         recentPulsesList.appendChild(card);
     });
 };
