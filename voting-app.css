@@ -108,6 +108,38 @@ body {
     margin-top: 0;
 }
 
+.recent-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 16px;
+}
+
+.recent-item {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 14px 16px;
+    border-radius: var(--radius-md);
+    background: rgba(11, 45, 91, 0.04);
+}
+
+.recent-title {
+    font-weight: 700;
+}
+
+.recent-meta {
+    font-size: 13px;
+    color: var(--muted);
+}
+
+.recent-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 6px;
+}
+
 .form {
     display: flex;
     flex-direction: column;
